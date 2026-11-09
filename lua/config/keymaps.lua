@@ -4,3 +4,10 @@
 vim.keymap.set("n", "<leader>un", function()
   vim.opt.number = not vim.opt.number
 end, { desc = "Toggle absolute line numbers" })
+
+-- Exit terminal mode with Esc
+vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", {
+  noremap = true,
+  silent = true,
+  desc = "Exit terminal mode",
+})

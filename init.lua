@@ -1,10 +1,10 @@
 -- bootstrap lazy.nvim, LazyVim and your plugins
--- ttom terminal with Ctrl + Space
 require("config.lazy")
 
--- Toggle bottom terminal with Ctrl + Space
+-- Toggle bottom terminal with F5 (using fish shell)
 local term_win = nil
 vim.o.shell = vim.fn.exepath("fish")
+
 vim.keymap.set("n", "<F5>", function()
   if term_win and vim.api.nvim_win_is_valid(term_win) then
     vim.api.nvim_win_close(term_win, true)
@@ -16,3 +16,5 @@ vim.keymap.set("n", "<F5>", function()
     vim.cmd("startinsert")
   end
 end, { desc = "Toggle bottom terminal" })
+
+-- Make Esc exit terminal mode
