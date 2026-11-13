@@ -403,6 +403,44 @@ local function wrap_conds(lines, strs)
   return out
 end
 
+local function split_else(lines)
+  local out = {}
+  for _, l in ipairs(lines) do
+    local ind, rest = l:match("^(\t*)else%s+(%S.*)$")
+    if ind and not rest:match("^if%f[%W]") and not rest:match("^{") and not rest:match("^/[/*]") then
+      out[#out + 1] = ind .. "else"
+      out[#out + 1] = ind .. "\t" .. rest
+    else
+      out[#out + 1] = l
+    end
+  end
+  return out
+end
+
+local function fix_else(lines)
+  for i, l in ipairs(lines) do
+    local ind = l:match("^(\t*)else$")
+    if ind and #ind > 0 then
+      local k = i - 1
+      while k >= 1 and (lines[k]:match("^%s*//") or lines[k]:match("^%s*/%*.*%*/%s*$")) do
+        k = k - 1
+      end
+      if k < i - 1 and k >= 1 and not lines[k]:match("[{;]%s*$") then
+        local pind = lines[k]:match("^(\t*)if%s*%(") or lines[k]:match("^(\t*)else if%s*%(")
+        if pind and #pind < #ind then
+          local diff = #ind - #pind
+          lines[i] = pind .. "else"
+          local nxt = lines[i + 1]
+          if nxt and nxt:sub(1, diff) == string.rep("\t", diff) then
+            lines[i + 1] = nxt:sub(diff + 1)
+          end
+        end
+      end
+    end
+  end
+  return lines
+end
+
 return {
   "stevearc/conform.nvim",
   opts = {
@@ -425,6 +463,11 @@ return {
                 end
                 local ol = vim.split((res.stdout:gsub("\n$", "")), "\n", { plain = true })
                 ol = wrap_conds(ol, strs)
+                ol = wrap_conds(ol, strs)
+                ol = split_else(ol)
+                ol = wrap_conds(ol, strs)
+                ol = split_else(ol)
+                ol = fix_else(ol)
                 local o = table.concat(ol, "\n"):gsub("__S(%d+)__", function(k)
                   return strs[tonumber(k)]
                 end)
